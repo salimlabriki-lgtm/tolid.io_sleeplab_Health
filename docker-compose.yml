@@ -48,6 +48,41 @@ services:
       timeout: 5s
       retries: 30
     command: ["/bin/bash","-lc","/app/bootstrap.sh"]
+  
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+
+    # ---- Ports exposés ----
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"    # API HTTP Ollama (localhost:11434)
+
+    # ---- Variables d'environnement ----
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h            # garde les modèles chargés 24h
+      # - OLLAMA_NOPULL=1                # (optionnel) bloque les pulls automatiques
+
+    # ---- Volume pour persister les modèles téléchargés ----
+    volumes:
+      - ollama_models:/root/.ollama
+
+    # ---- Healthcheck pour attendre l'API ----
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+    # ---- GPU (optionnel, seulement si machine NVIDIA configurée) ----
+    # profiles: ["gpu"]
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: ["gpu"]
+
 
 volumes:
   pgdata:
+  ollama_models:
