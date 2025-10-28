@@ -33,3 +33,12 @@ jobs:
       - name: Teardown
         if: always()
         run: docker compose down -v
+    
+      - name: Wait for Superset
+        run: 
+          for i in {1..60}; do
+            curl -fsS http://localhost:8088/health && exit 0
+            sleep 2
+          done
+          echo "Superset not healthy" && exit 1
+

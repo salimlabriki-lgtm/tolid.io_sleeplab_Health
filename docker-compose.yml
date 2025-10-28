@@ -14,7 +14,7 @@ services:
       retries: 20
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./db/ddl:/docker-entrypoint-initdb.d:ro   # <-- DDL + seed auto
+      - ./db/ddl:/docker-entrypoint-initdb.d:ro
 
   etl:
     image: python:3.11-slim
@@ -27,6 +27,27 @@ services:
     volumes:
       - ./etl:/app
     command: bash -lc "pip install -r requirements.txt && pytest -q && python app/etl_demo.py && echo 'ETL done'"
+
+  superset:
+    image: apache/superset:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SUPERSET_SECRET_KEY: "please_change_me"
+      SUPERSET_ADMIN: "admin"
+      SUPERSET_PASSWORD: "admin"
+      DB_HOST: "postgres"              # pour le wait
+    volumes:
+      - ./superset/bootstrap.sh:/app/bootstrap.sh:ro
+    ports:
+      - "8088:8088"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8088/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    command: ["/bin/bash","-lc","/app/bootstrap.sh"]
 
 volumes:
   pgdata:
