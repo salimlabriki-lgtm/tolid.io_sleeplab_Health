@@ -2,9 +2,7 @@ image: gitpod/workspace-full
 tasks:
   - name: start
     init: docker compose build
-    command: docker compose up -d
+    command: docker compose up -d ollama
 ports:
-  - port: 8088
+  - port: 11434
     onOpen: open-preview
-  - port: 5432
-    onOpen: ignore
