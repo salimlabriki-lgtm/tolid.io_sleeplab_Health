@@ -43,6 +43,7 @@ rag-files-heavy:
 	| python scripts/rag_select.py "analyse détaillée" --k 12 --chunk-lines 400 --overlap 80 \
 	| NUM_CTX=65536 OLLAMA_MODEL="llama3.1:8b" python scripts/rag_ask.py "Analyse détaillée (10 puces)"
 
+python scripts/rag_fetch_files.py --max-rows-per-file 100
 
 
 
