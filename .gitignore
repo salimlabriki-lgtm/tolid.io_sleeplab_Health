@@ -3,4 +3,7 @@ __pycache__/
 .venv/
 *.pyc
 *.edf
+data/raw/**
+!data/raw/**/*sample*.csv
+!data/raw/**/*demo*.csv
 

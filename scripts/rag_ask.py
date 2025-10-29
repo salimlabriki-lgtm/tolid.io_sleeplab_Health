@@ -26,3 +26,8 @@ if __name__ == "__main__":
     context = "\n\n---\n\n".join(chunks)
     prompt = PROMPT_TMPL.format(context=context[:8000], question=q)
     print(ask(MODEL, prompt))
+
+raw = sys.stdin.read().strip()
+if not raw:
+    print("Aucun contexte reçu (stdin vide)."); raise SystemExit(1)
+

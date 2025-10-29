@@ -27,10 +27,18 @@ llm-prompt:
 	./scripts/wait_for_ollama.sh
 	./scripts/ollama_prompt.sh "Hello, réponds en 5 mots"
 
-.PHONY: rag
+rag-files:
+	@python scripts/rag_fetch_files.py --root data/raw --glob "**/*.{csv,xlsx,edf}" --max-rows-per-file 800 \
+	| python scripts/rag_select.py "analyse des canaux et fréquences d'échantillonnage" \
+	| python scripts/rag_ask.py "Résume les canaux et points notables (5-7 puces)"
 
-rag:
-	@python scripts/rag_fetch.py \
-	| python scripts/rag_select.py "analyse des cycles et proportion de REM" \
-	| python scripts/rag_ask.py "Analyse les cycles et la part de REM"
+	@{ \
+	  python scripts/rag_fetch_files.py --root data/raw --glob "**/*.csv" --max-rows-per-file 800; \
+	  python scripts/rag_fetch_files.py --root data/raw --glob "**/*.xlsx" --max-rows-per-file 800; \
+	  python scripts/rag_fetch_files.py --root data/raw --glob "**/*.edf" --max-rows-per-file 800; \
+	} \
+	| python scripts/rag_select.py "..." \
+	| python scripts/rag_ask.py "..."
+
+
 
