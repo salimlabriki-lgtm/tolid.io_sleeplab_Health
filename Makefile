@@ -27,3 +27,10 @@ llm-prompt:
 	./scripts/wait_for_ollama.sh
 	./scripts/ollama_prompt.sh "Hello, réponds en 5 mots"
 
+.PHONY: rag
+
+rag:
+	@python scripts/rag_fetch.py \
+	| python scripts/rag_select.py "analyse des cycles et proportion de REM" \
+	| python scripts/rag_ask.py "Analyse les cycles et la part de REM"
+
