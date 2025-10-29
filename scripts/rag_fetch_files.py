@@ -146,21 +146,47 @@ def read_edf(path: Path, max_rows: int):
 # ---------------------------
 # Collecteur générique
 # ---------------------------
-def collect(root: Path, max_rows_per_file: int, glob: str):
+def collect(root: Path, max_rows_per_file: int, glob: str, exts):
     lines = []
-    files = sorted(root.rglob(glob))
+    files = []
+    extset = {e.lower().strip() for e in exts} if exts else None
+
+    # on itère sur *tous* les fichiers et on filtre par extensions si fournies
+    for p in sorted(root.rglob(glob)):
+        if extset:
+            if p.suffix.lower().lstrip(".") not in extset:
+                continue
+        files.append(p)
+
     for p in files:
         try:
             ext = p.suffix.lower()
             if ext == ".csv":
                 lines += read_csv(p, max_rows_per_file)
-            elif ext in (".xlsx",):
+            elif ext == ".xlsx":
                 lines += read_xlsx(p, max_rows_per_file)
-            elif ext in (".edf",):
+            elif ext == ".edf":
                 lines += read_edf(p, max_rows_per_file)
         except Exception as e:
             print(f"# skip {p}: {e}", file=sys.stderr)
     return "\n".join(lines)
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--root", default="data/raw")
+    ap.add_argument("--glob", default="**/*.*")
+    ap.add_argument("--max-rows-per-file", type=int, default=500)
+    ap.add_argument("--exts", default="csv,xlsx,edf", help="liste d'extensions, ex: csv,xlsx,edf")
+    ap.add_argument("--debug", action="store_true")
+    args = ap.parse_args()
+
+    root = Path(args.root)
+    out = collect(root, args.max_rows_per_file, args.glob, args.exts.split(",") if args.exts else None)
+    if args.debug:
+        # mini récap utile si c'est vide
+        print(f"# DEBUG root={root.resolve()} glob='{args.glob}' exts='{args.exts}'", file=sys.stderr)
+        print(f"# DEBUG bytes_out={len(out.encode('utf-8'))}", file=sys.stderr)
+    print(out)
 
 # ---------------------------
 # CLI

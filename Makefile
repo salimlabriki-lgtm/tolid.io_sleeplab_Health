@@ -27,18 +27,22 @@ llm-prompt:
 	./scripts/wait_for_ollama.sh
 	./scripts/ollama_prompt.sh "Hello, réponds en 5 mots"
 
+.PHONY: rag-files rag-files-q
+
 rag-files:
-	@python scripts/rag_fetch_files.py --root data/raw --glob "**/*.{csv,xlsx,edf}" --max-rows-per-file 800 \
+	@python scripts/rag_fetch_files.py --root data/raw --glob "**/*.*" --exts "csv,xlsx,edf" \
 	| python scripts/rag_select.py "analyse des canaux et fréquences d'échantillonnage" \
 	| python scripts/rag_ask.py "Résume les canaux et points notables (5-7 puces)"
 
-	@{ \
-	  python scripts/rag_fetch_files.py --root data/raw --glob "**/*.csv" --max-rows-per-file 800; \
-	  python scripts/rag_fetch_files.py --root data/raw --glob "**/*.xlsx" --max-rows-per-file 800; \
-	  python scripts/rag_fetch_files.py --root data/raw --glob "**/*.edf" --max-rows-per-file 800; \
-	} \
-	| python scripts/rag_select.py "..." \
-	| python scripts/rag_ask.py "..."
+rag-files-q:
+	@python scripts/rag_fetch_files.py --root data/raw --glob "**/*.*" --exts "csv,xlsx,edf" \
+	| python scripts/rag_select.py "$(Q)" \
+	| python scripts/rag_ask.py "$(Q)"
+rag-files-heavy:
+	@python scripts/rag_fetch_files.py --root data/raw --exts "csv,xlsx,edf" \
+	| python scripts/rag_select.py "analyse détaillée" --k 12 --chunk-lines 400 --overlap 80 \
+	| NUM_CTX=65536 OLLAMA_MODEL="llama3.1:8b" python scripts/rag_ask.py "Analyse détaillée (10 puces)"
+
 
 
 

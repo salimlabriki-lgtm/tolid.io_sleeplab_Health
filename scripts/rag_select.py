@@ -1,5 +1,6 @@
 import sys, re, json
 from rank_bm25 import BM25Okapi
+impoty argaparse
 
 CHUNK_LINES = 200
 OVERLAP = 40
@@ -26,9 +27,20 @@ def top_k(chunks, query, k=3):
     return [c for _, c in ranked[:k]]
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("query", nargs="?", default="stades REM et N3")
+    parser.add_argument("--k", type=int, default=3)
+    parser.add_argument("--chunk-lines", type=int, default=200)
+    parser.add_argument("--overlap", type=int, default=40)
+    args = parser.parse_args()
+
     full = sys.stdin.read().strip()
     if not full:
         print("[]"); raise SystemExit(0)
-    user_q = sys.argv[1] if len(sys.argv) > 1 else "stades REM et N3"
+
+    # utilise les paramètres
+    global CHUNK_LINES, OVERLAP
+    CHUNK_LINES, OVERLAP = args.chunk_lines, args.overlap
+
     chunks = chunk_lines(full)
-    print(json.dumps(top_k(chunks, user_q, k=3), ensure_ascii=False))
+    print(json.dumps(top_k(chunks, args.query, k=args.k), ensure_ascii=False))
