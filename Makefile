@@ -45,5 +45,9 @@ rag-files-heavy:
 
 python scripts/rag_fetch_files.py --max-rows-per-file 100
 
+rag-files-light:
+	@python scripts/rag_fetch_files.py --root data/raw --exts "csv,xlsx,edf" --max-rows-per-file 150 \
+	| python scripts/rag_select.py "metadata extraction" --k 3 --chunk-lines 200 --overlap 40 \
+	| python scripts/rag_ask.py "Output ONLY the Markdown table (no preface, no notes)."
 
 
