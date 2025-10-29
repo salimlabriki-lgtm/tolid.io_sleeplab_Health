@@ -1,11 +1,7 @@
-import sys, re, json
+import sys, re, json, argparse
 from rank_bm25 import BM25Okapi
-impoty argaparse
 
-CHUNK_LINES = 200
-OVERLAP = 40
-
-def chunk_lines(text: str, n=CHUNK_LINES, overlap=OVERLAP):
+def chunk_lines(text: str, n: int, overlap: int):
     lines = text.strip().splitlines()
     if not lines: return []
     chunks=[]; i=0
@@ -18,7 +14,7 @@ def chunk_lines(text: str, n=CHUNK_LINES, overlap=OVERLAP):
 def tok(s: str):
     return re.findall(r"[a-zA-Z0-9]+", s.lower())
 
-def top_k(chunks, query, k=3):
+def top_k(chunks, query, k: int):
     if not chunks: return []
     corpus = [tok(c) for c in chunks]
     bm25 = BM25Okapi(corpus)
@@ -27,20 +23,17 @@ def top_k(chunks, query, k=3):
     return [c for _, c in ranked[:k]]
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("query", nargs="?", default="stades REM et N3")
-    parser.add_argument("--k", type=int, default=3)
-    parser.add_argument("--chunk-lines", type=int, default=200)
-    parser.add_argument("--overlap", type=int, default=40)
-    args = parser.parse_args()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("query", nargs="?", default="analyse des canaux et fréquences d'échantillonnage")
+    ap.add_argument("--k", type=int, default=3)
+    ap.add_argument("--chunk-lines", type=int, default=200)
+    ap.add_argument("--overlap", type=int, default=40)
+    args = ap.parse_args()
 
     full = sys.stdin.read().strip()
     if not full:
-        print("[]"); raise SystemExit(0)
+        print("[]")
+        raise SystemExit(0)
 
-    # utilise les paramètres
-    global CHUNK_LINES, OVERLAP
-    CHUNK_LINES, OVERLAP = args.chunk_lines, args.overlap
-
-    chunks = chunk_lines(full)
+    chunks = chunk_lines(full, n=args.chunk_lines, overlap=args.overlap)
     print(json.dumps(top_k(chunks, args.query, k=args.k), ensure_ascii=False))
