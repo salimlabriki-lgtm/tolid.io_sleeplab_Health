@@ -41,9 +41,6 @@ OUTPUT (print this table only):
 ---
 CONTEXT:
 {context}
----
-QUESTION:
-{question}
 """
 
 def ask(prompt: str) -> str:
