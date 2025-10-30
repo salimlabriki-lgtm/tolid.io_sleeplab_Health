@@ -49,3 +49,8 @@ rag-files-light:
 	@python scripts/rag_fetch_files.py --root data/raw --exts "csv,xlsx,edf" --max-rows-per-file 150 \
 	| python scripts/rag_select.py "metadata extraction" --k 3 --chunk-lines 200 --overlap 40 \
 	| python scripts/rag_ask.py "Output ONLY the Markdown table (no preface, no notes)."
+rag-metadata:
+	@python scripts/rag_fetch_files.py --root data/raw --exts "csv,xlsx,edf" --max-rows-per-file $${MAX_ROWS:-200} \
+	| python scripts/rag_select.py "metadata catalog extraction" --k $${K:-8} --chunk-lines $${CHUNK:-300} --overlap $${OVL:-60} \
+	| OLLAMA_MODEL="$${OLLAMA_MODEL:-qwen2.5:0.5b}" NUM_CTX=$${NUM_CTX:-16384} REQUEST_TIMEOUT=$${REQUEST_TIMEOUT:-900} NUM_PREDICT=$${NUM_PREDICT:-2048} \
+	  python scripts/rag_ask.py "Build ONLY the required Markdown table (no other text)."
