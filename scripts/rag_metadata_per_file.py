@@ -10,34 +10,44 @@ NUM_CTX = int(os.getenv("NUM_CTX", "16384"))
 NUM_PREDICT = int(os.getenv("NUM_PREDICT", "1500"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "900"))
 
-PROMPT_TMPL = """You are a healthcare sleep **data catalog** assistant.
+PROMPT_TMPL = """You are a healthcare sleep data catalog assistant. Your job is to extract metadata fields (schema) exhaustively from the provided CONTEXT and produce a single Markdown table. Do not summarize events or measurements; list field names only with one concise definition each.
 
-Goal
-- Build a metadata dictionary: **list field names (metadata), not data rows**.
-- Use ONLY what is visible in CONTEXT; if unknown, write "—".
-- Output a **single Markdown table** and nothing else.
+WHAT COUNTS AS METADATA
+- CSV/XLSX: column headers, sheet names, and any header-like keys detected from the first rows (e.g., header-looking lines, key=value tokens, units in parentheses, multilingual labels).
+- EDF header (global): version, patient_id, recording_id, startdate, starttime, header_bytes, n_records, record_duration_s, n_signals, etc. (ONLY if present in CONTEXT).
+- EDF per-signal: label, transducer, phys_dim, phys_min, phys_max, dig_min, dig_max, prefilter, samp_per_record, fs_hz (ONLY if present).
 
-Definitions (use internally, do not print):
-- *Metadata field* = a schema element (column name, header key, EDF header key, or EDF per-signal attribute like label, fs_hz, phys_dim). It is **not** a timestamped event or a data record.
+EXHAUSTIVE HEADER DETECTION (CSV/XLSX)
+Use ONLY what is in CONTEXT. If headers are missing/ambiguous, infer from the visible rows and mark example_data from the same lines:
+1) If a header row exists (first non-empty row with multiple textual cells), treat it as headers.
+2) If the first row is empty/merged, look at the next rows for likely headers (mostly text, distinct from numeric patterns).
+3) If there are two-tier headers (e.g., "AHI (index)" on row1 and a sublabel row2), combine into one normalized name (e.g., apnea_hypopnea_index).
+4) If headers are repeated or multilingual, deduplicate and keep one normalized name.
+5) If no explicit headers exist, infer candidates by column position using the first 5–10 rows:
+   - Prefer tokens that repeat in a column (e.g., S0001, S0002 → folder_id).
+   - Detect key=value patterns and lift the keys as metadata fields.
+   - Detect units/labels in parentheses (e.g., "SpO2 (%)" → spo2_percent).
+   - Use domain hints (AHI, ODI, PLMI, AI, HI, LMI, start_time, study_type, scorer) ONLY if those tokens appear in CONTEXT.
+6) Sheet-level metadata (XLSX): if sheet names are visible (e.g., "TME", "SIM"), include a field sheet_name.
+7) Normalize field names to lower_snake_case (e.g., "Apnea-Hypopnea Index" → apnea_hypopnea_index; "Start Time" → start_time).
+8) Never invent fields not evidenced by the CONTEXT. Every row must be justified by a visible header/token/pattern in the CONTEXT.
 
-Scope to extract
-- CSV/XLSX: take **column headers only** as metadata field names.
-- EDF header (global): version, patient_id, recording_id, startdate, starttime, header_bytes, n_records, record_duration_s, n_signals, etc. (whatever is present in CONTEXT).
-- EDF signals (per channel): label, transducer, phys_dim, phys_min, phys_max, dig_min, dig_max, prefilter, samp_per_record, fs_hz.
+OUTPUT CONSTRAINTS (STRICT)
+- Output ONLY the table (no prose, no explanations).
+- Table format (exactly these 4 columns, in this order):
 
-Hard constraints
-- **Do NOT list rows of measurements or timelines** (no “start/end/duration” event lines).
-- **Deduplicate** logically equivalent fields (normalize names).
-- Normalize **metadata_field** to lower_snake_case.
-- **example_data**: one short representative value if visible in CONTEXT; else "—".
-- Concise **proposed_definition** (include units if visible).
-- No prose before/after the table. Output the table only.
-
-OUTPUT (print this table only):
 | source | metadata_field | example_data | proposed_definition |
 
-- **source** ∈ {{csv,xlsx,edf_header,edf_signal}}.
-- Each row = one distinct metadata field discovered in CONTEXT.
+- source ∈ {{csv,xlsx,edf_header,edf_signal}}.
+- metadata_field: normalized lower_snake_case.
+- example_data: one short representative value seen in CONTEXT for that field, otherwise "—".
+- proposed_definition: concise, technical definition; include unit if visible (e.g., "Apnea–Hypopnea Index (events/hour)").
+- Be exhaustive: include ALL detectable fields from the CONTEXT (headers, key-like tokens, EDF header keys, EDF signal attributes).
+
+HALLUCINATION GUARDRAILS
+- Use ONLY strings/tokens present in CONTEXT.
+- Do NOT output timelines or per-epoch events (start/end/duration lines) as metadata.
+- If unsure about a field name but there is a consistent column pattern, propose a conservative normalized name and set example_data from CONTEXT; otherwise skip.
 
 ---
 CONTEXT:
