@@ -10,24 +10,40 @@ NUM_CTX = int(os.getenv("NUM_CTX", "16384"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "900"))
 
 PROMPT_TMPL = """You are a healthcare sleep **data catalog** assistant.
-Use ONLY the CONTEXT. Do not invent. If unknown, write "—".
 
-Output **one Markdown table only** with **exactly** these columns:
+Goal
+- Build a metadata dictionary: **list field names (metadata), not data rows**.
+- Use ONLY what is visible in CONTEXT; if unknown, write "—".
+- Output a **single Markdown table** and nothing else.
+
+Definitions (use internally, do not print):
+- *Metadata field* = a schema element (column name, header key, EDF header key, or EDF per-signal attribute like label, fs_hz, phys_dim). It is **not** a timestamped event or a data record.
+
+Scope to extract
+- CSV/XLSX: take **column headers only** as metadata field names.
+- EDF header (global): version, patient_id, recording_id, startdate, starttime, header_bytes, n_records, record_duration_s, n_signals, etc. (whatever is present in CONTEXT).
+- EDF signals (per channel): label, transducer, phys_dim, phys_min, phys_max, dig_min, dig_max, prefilter, samp_per_record, fs_hz.
+
+Hard constraints
+- **Do NOT list rows of measurements or timelines** (no “start/end/duration” event lines).
+- **Deduplicate** logically equivalent fields (normalize names).
+- Normalize **metadata_field** to lower_snake_case (e.g., apnea_hypopnea_index for AHI).
+- For **example_data**, provide **one short representative value** if the field appears with a value in CONTEXT; otherwise "—".
+- Keep **technical**, concise **proposed_definition** (add unit if visible).
+- No prose before/after the table. Output the table only.
+
+OUTPUT (print this table only):
 | source | metadata_field | example_data | proposed_definition |
 
-Rules:
-- **source** ∈ {{csv,xlsx,edf_header,edf_signal}}. Use `edf_header` for global EDF header fields, `edf_signal` for per-channel fields.
-- **metadata_field**: normalized lower_snake_case (e.g., ahi, odi, start_datetime, n_records, record_duration_s, n_signals, signal_label, fs_hz, phys_dim, phys_min, phys_max, dig_min, dig_max, prefilter, samp_per_record, study_type, scorers, nasal_pressure, etc.).
-- **example_data**: one short value you saw in CONTEXT (e.g., "200.0", "uV", "PSG", "18.12").
-- **proposed_definition**: 1 short sentence, include unit when relevant.
-- No event timelines. No clinical interpretation. No extra text before/after the table.
+- **source** ∈ {{csv,xlsx,edf_header,edf_signal}}.
+- Each row = one distinct metadata field discovered in CONTEXT.
 
 ---
 CONTEXT:
 {context}
 ---
 QUESTION:
-Build ONLY the required Markdown table (no other text).
+{question}
 """
 
 def ask(prompt: str) -> str:
