@@ -58,4 +58,8 @@ rag-metadata-per-file:
 	@mkdir -p outputs
 	@OLLAMA_MODEL="$${OLLAMA_MODEL:-qwen2.5:0.5b}" NUM_CTX=$${NUM_CTX:-16384} REQUEST_TIMEOUT=$${REQUEST_TIMEOUT:-900} NUM_PREDICT=$${NUM_PREDICT:-2048} \
 	  python scripts/rag_metadata_per_file.py data/raw outputs/metadata_catalog.md 300
+rag-metadata-each:
+	@mkdir -p outputs
+	@OLLAMA_MODEL="$${OLLAMA_MODEL:-qwen2.5:0.5b}" NUM_CTX=$${NUM_CTX:-16384} NUM_PREDICT=$${NUM_PREDICT:-1500} REQUEST_TIMEOUT=$${REQUEST_TIMEOUT:-900} \
+	  python scripts/rag_metadata_per_file.py data/raw outputs 200
 
