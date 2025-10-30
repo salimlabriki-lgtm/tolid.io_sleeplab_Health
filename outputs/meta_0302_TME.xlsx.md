@@ -1,8 +1,12 @@
 | source | metadata_field | example_data | proposed_definition |
 | --- | --- | --- | --- |
-| csv/xlsx | Heure de début | 03/15/2023 14:00:00 | Heure de début est la date et l'heure à partir duquel le patient a commencé à être surveillé. |
-| csv/xlsx | Heure de fin | 03/16/2023 15:00:00 | Heure de fin est la date et l'heure à partir où le patient a terminé d'être surveillé. |
-| csv/xlsx | Événement | - | - |
-| csv/xlsx | Durée | 4800000 | La durée du patient est de 1 heure et 36 minutes. |
-Note: The example_data column is not visible in the given context, so it's represented as "—" for clarity.
-This table represents only the metadata fields found in the CSV/XLSX file and their examples (Heure de début, Heure de fin).
+| csv,xlsx | Heure de début | 07:30,19:45 | Apnea-Hypopnea Index (events/hour) |
+| csv,xlsx | Heure de fin | 20:30,22:45 | Apnea-Hypopnea Index (events/hour) |
+| edf_header | Événement | TME, SIM | Start Time |
+| edf_signal | Durée | TME, SIM | Début du temps métrique |
+| csv,xlsx | Événement | 07:30,19:45 | Apnea-Hypopnea Index (events/hour) |
+| csv,xlsx | Événement | 20:30,22:45 | Apnea-Hypopnea Index (events/hour) |
+| edf_header | Durée | TME, SIM | Début du temps métrique |
+| edf_signal | Heure de début | 07:30,19:45 | Start Time |
+| edf_signal | Heure de fin | 20:30,22:45 | End Time |
+Note that the proposed definition for "Start Time" is conservative and based on a consistent column pattern.
