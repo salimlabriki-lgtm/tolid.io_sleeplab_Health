@@ -14,7 +14,7 @@ Output **one Markdown table only** with **exactly** these columns:
 | source | metadata_field | example_data | proposed_definition |
 
 Rules:
-- **source** ∈ {csv,xlsx,edf_header,edf_signal}. Use `edf_header` for global EDF header fields, `edf_signal` for per-channel fields.
+- **source** ∈ {{csv,xlsx,edf_header,edf_signal}}. Use `edf_header` for global EDF header fields, `edf_signal` for per-channel fields.
 - **metadata_field**: normalized lower_snake_case (e.g., ahi, odi, start_datetime, n_records, record_duration_s, n_signals, signal_label, fs_hz, phys_dim, phys_min, phys_max, dig_min, dig_max, prefilter, samp_per_record, study_type, scorers, nasal_pressure, etc.).
 - **example_data**: one short value you saw in CONTEXT (e.g., "200.0", "uV", "PSG", "18.12").
 - **proposed_definition**: 1 short sentence, include unit when relevant.

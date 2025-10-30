@@ -54,3 +54,8 @@ rag-metadata:
 	| python scripts/rag_select.py "metadata catalog extraction" --k $${K:-8} --chunk-lines $${CHUNK:-300} --overlap $${OVL:-60} \
 	| OLLAMA_MODEL="$${OLLAMA_MODEL:-qwen2.5:0.5b}" NUM_CTX=$${NUM_CTX:-16384} REQUEST_TIMEOUT=$${REQUEST_TIMEOUT:-900} NUM_PREDICT=$${NUM_PREDICT:-2048} \
 	  python scripts/rag_ask.py "Build ONLY the required Markdown table (no other text)."
+rag-metadata-per-file:
+	@mkdir -p outputs
+	@OLLAMA_MODEL="$${OLLAMA_MODEL:-qwen2.5:0.5b}" NUM_CTX=$${NUM_CTX:-16384} REQUEST_TIMEOUT=$${REQUEST_TIMEOUT:-900} NUM_PREDICT=$${NUM_PREDICT:-2048} \
+	  python scripts/rag_metadata_per_file.py data/raw outputs/metadata_catalog.md 300
+
