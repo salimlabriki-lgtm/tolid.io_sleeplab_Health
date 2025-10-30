@@ -63,14 +63,43 @@ def ask(prompt: str) -> str:
 
 def file_to_context(p: Path, max_rows: int = 300) -> str:
     ext = p.suffix.lower()
-    lines = []
+    # <<< NOUVEAU : versions "headers only" >>>
     if ext == ".csv":
-        lines = read_csv(p, max_rows)
-    elif ext == ".xlsx":
-        lines = read_xlsx(p, max_rows)
-    elif ext == ".edf":
-        lines = read_edf(p, max_rows)
-    return "\n".join(lines)
+        # lis UNIQUEMENT la première ligne (noms de colonnes)
+        import csv
+        with open(p, "r", encoding="utf-8", errors="ignore", newline="") as f:
+            r = csv.reader(f)
+            headers = next(r, [])
+        line = "file={name} kind=csv_header | columns={cols}".format(
+            name=p.name, cols=",".join([str(h).strip() for h in headers if h is not None])
+        )
+        return line
+
+    if ext == ".xlsx":
+        from openpyxl import load_workbook
+        wb = load_workbook(p, read_only=True, data_only=True)
+        ws = wb.active
+        headers = next(ws.iter_rows(values_only=True), [])
+        wb.close()
+        line = "file={name} kind=xlsx_header | columns={cols}".format(
+            name=p.name, cols=",".join([str(h).strip() for h in headers if h is not None])
+        )
+        return line
+
+    if ext == ".edf":
+        # garde le header EDF + au plus 20 signaux
+        header, signals = read_edf(p, max_rows=0)  # ta read_edf renvoie des lignes prêtes
+        # read_edf() te renvoie déjà 1 ligne header + N lignes signaux.
+        # On tronque les signaux à 20 pour rester compact.
+        lines = header.split("\n") if isinstance(header, str) else []
+        if not lines:
+            # si ta read_edf actuelle renvoie une list, garde le 1er (header) + 20 signaux
+            all_lines = read_edf(p, max_rows=20)
+            return "\n".join(all_lines)
+        return "\n".join(lines[:1] + lines[1:21])
+
+    return ""  # formats non pris
+
 
 def main(root="data/raw", out_path="outputs/metadata_catalog.md", max_rows=300):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
