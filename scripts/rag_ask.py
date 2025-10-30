@@ -7,24 +7,20 @@ PORT  = os.getenv("OLLAMA_PORT", "11434")
 # Lis la fenêtre souhaitée depuis l'env, sinon 8192
 NUM_CTX = int(os.getenv("NUM_CTX", "8192"))
 
-PROMPT_TMPL = """You are a Data Architect specialized in healthcare and sleep analysis.
-The text below contains factual extracts from CSV, XLSX, and EDF files.
-You must rely **only** on the visible content in the CONTEXT.
-Do not invent or infer anything that is not explicitly present. 
-If a piece of information is missing, write "—".
+PROMPT_TMPL = """You are a healthcare sleep data architect.
+Use ONLY the CONTEXT. Do not invent anything. If missing, write "—".
 
-Your task:
-Extract metadata in a clear and structured table format.
+Goal: Produce a **comprehensive** metadata catalog table.
 
-EXPECTED OUTPUT (Markdown table):
+OUTPUT (Markdown table only; no preface/no notes):
 | source | metadata_field | example_data | proposed_definition |
 
-Rules:
-- Do NOT generate medical diagnostics or mention imaging (CT, MRI, etc.).
-- Each table row must correspond to a field or data element actually observed in the CONTEXT.
-- Group similar fields and normalize naming (e.g., “ahi” = “apnea-hypopnea index”).
-- Include units in the definition when present.
-- Keep the tone technical and descriptive, suitable for data catalog documentation.
+Coverage rules (strict):
+- Extract **every distinct field** you observe across CSV, XLSX and EDF (header + signals).
+- For EDF, include: start_datetime, n_records, record_duration_s, n_signals, signal label, fs_hz, phys_dim, phys_min/max, dig_min/max, prefilter, samp_per_record.
+- For CSV/XLSX, include all columns (e.g., ahi, odi, ai, hi, plmi, study_type, start_time, nasal_pressure, scorers, etc.).
+- Normalize names (lower_snake_case); merge duplicates; add units in definition if visible.
+- **Minimum rows required:** 40. If fewer fields are visible, list all available and add “—” where unknown.
 
 ---
 CONTEXT:
