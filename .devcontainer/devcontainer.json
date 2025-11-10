@@ -1,6 +1,6 @@
 {
   "name": "tolid.io_sleeplab_Health",
-  "dockerComposeFile": ".devcontainer/docker-compose.yml",
+  "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/tolid.io_sleeplab_Health",
   "remoteUser": "vscode"
