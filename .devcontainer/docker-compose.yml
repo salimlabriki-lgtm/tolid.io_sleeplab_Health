@@ -2,21 +2,12 @@ version: "3.9"
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
     working_dir: /workspaces/tolid.io_sleeplab_Health
     volumes:
       - ..:/workspaces:cached
     depends_on:
       - postgres
-    # Si tu avais déjà des env ou extra_hosts définis, garde-les ici.
-    # Exemple:
-    # environment:
-    #   - POSTGRES_HOST=postgres
-    #   - POSTGRES_DB=sleeplab
-    #   - POSTGRES_USER=sleeplab
-    #   - POSTGRES_PASSWORD=sleeplab
 
   postgres:
     image: postgres:16
@@ -38,9 +29,6 @@ services:
     restart: unless-stopped
     volumes:
       - ollama-data:/root/.ollama
-    # Ajoute tes ports/env si défini dans Git Set-up
-    # ports:
-    #   - "11434:11434"
 
 volumes:
   ollama-data:
