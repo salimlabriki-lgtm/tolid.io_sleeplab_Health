@@ -3,8 +3,8 @@ version: "3.9"
 services:
   app:
     build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     working_dir: /workspaces/tolid.io_sleeplab_Health
     volumes:
       - ..:/workspaces:cached
